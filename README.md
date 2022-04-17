@@ -39,7 +39,7 @@
 - If we retrieve the data from `local cache` we will emit the `success resource` with the data in form of list of CompanyListingModel
   - And at the same time we will **request new data** from the api if we want to, for example to update our cache or to populate the cache first time
  - To represent these continuously changing states we use `Flow` from `Kotlin Coroutines` 
-- 
+
 
 ## Let's flow through the app!
 ### Project Structure
