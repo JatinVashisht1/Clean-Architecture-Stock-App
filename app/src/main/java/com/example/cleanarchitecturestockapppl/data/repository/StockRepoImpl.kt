@@ -20,14 +20,17 @@ import javax.inject.Singleton
 // objective of repository is very specific so it belongs to data layer
 @Singleton
 class StockRepoImpl @Inject constructor(
-    val api: StockApi,
-    val db: StockDatabase,
-    val companyListingParser: CSVParser<CompanyListingModel>
+    private val api: StockApi,
+    private val db: StockDatabase,
+    // dagger hilt is NOT smart enough to pass concrete implementation of the CSVParser interface we created
+    // it is because we can have multiple different implementations of the same interface
+    private val companyListingParser: CSVParser<CompanyListingModel>
 ) : StockRepository {
     override suspend fun getCompanyListings(
         fetchFromRemote: Boolean,
         query: String
     ): Flow<Resource<List<CompanyListingModel>>> = flow {
+
         emit(Resource.Loading<List<CompanyListingModel>>(isLoading = true))
         val localListings = db.dao.searchCompanyListing(query = query)
         emit(Resource.Success<List<CompanyListingModel>>(data = localListings.map { it.toCompanyListingModel() }))
@@ -35,6 +38,7 @@ class StockRepoImpl @Inject constructor(
         // if we don't get any request to load data from api and we have valid data in the cache then we don't have to make api call
         val isDbEmpty = localListings.isEmpty() && query.isBlank()
         val shouldJustLoadFromCache = !isDbEmpty && !fetchFromRemote
+
         // CLEAN CODE TIP
         // we could have just written the condition in shouldJustLoadFromCache condition directly in the if condition
         // but we didn't do that because if someone else will read our code then it would not be clear in the first place what our code is doing
@@ -42,6 +46,7 @@ class StockRepoImpl @Inject constructor(
             emit(Resource.Loading<List<CompanyListingModel>>(isLoading = false))
             return@flow
         }
+
         val remoteListings = try {
             val response = api.getListings()
             val responseByteStream = response.byteStream()
@@ -72,6 +77,7 @@ class StockRepoImpl @Inject constructor(
             null
         }
         remoteListings?.let { listings ->
+
             db.dao.clearCompanyListings()
             // here we are following Single Source of Truth principle
             // SST principle says that your app should depend on data from one place only (mostly database)
@@ -84,8 +90,8 @@ class StockRepoImpl @Inject constructor(
                     data = db.dao.searchCompanyListing("")
                         .map { it.toCompanyListingModel() })
             )
-            emit(Resource.Loading<List<CompanyListingModel>>(isLoading = false))
 
+            emit(Resource.Loading<List<CompanyListingModel>>(isLoading = false))
         }
     }
 }

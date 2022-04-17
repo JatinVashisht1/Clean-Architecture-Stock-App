@@ -9,6 +9,7 @@ import java.io.InputStreamReader
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// by annotating a class by @Inject then we don't have to specify @Provides function in our Module
 @Singleton
 class CompanyListingParser @Inject constructor() : CSVParser<CompanyListingModel> {
     override suspend fun parse(stream: InputStream): List<CompanyListingModel> {
