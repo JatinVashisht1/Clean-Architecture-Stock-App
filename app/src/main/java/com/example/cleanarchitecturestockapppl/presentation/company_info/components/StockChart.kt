@@ -64,7 +64,7 @@ fun StockChart(
                     // let's understand the below statement
                     // we have added i because initially i is 0 and then it gets incremented by 2
                     // and the x axis starts from left so we are putting numbers at their correct place
-                    spacing + i + spacingPerHour,
+                    spacing + i * spacingPerHour,
                     size.height - 5, // 5 here is random number which means 5 px from bottom (y starts at top and ends at bottom)
                     textPaint,
                 )
@@ -82,7 +82,7 @@ fun StockChart(
                     round(lowerValue + priceStep * i).toString(),
                     30f,
                     // this shows what from where we want to start and how much gap will be between each value of y axis
-                    size.height - spacing - i * size.height,
+                    size.height - spacing - i * size.height/5,
                     textPaint
                 )
             }
@@ -100,7 +100,6 @@ fun StockChart(
                 // so if current point is the last index then there would be no next point and to avoid index out of bound exception
                 val nextInfo = infos.getOrNull(i + 1) ?: infos.last()
                 // formula to map left and right point to a value between 0 and 1
-                // left
                 val leftRatio = (info.close - lowerValue) / (upperValue - lowerValue)
                 val rightRatio = (nextInfo.close - lowerValue) / (upperValue - lowerValue)
 
@@ -118,7 +117,7 @@ fun StockChart(
 
                 // this is the mathematical calculation that make a smooth path
                 quadraticBezierTo(
-                    x1, y1, (x1 + x2) / 2, (y1 + y2) / 2,
+                    x1, y1, lastX, (y1 + y2) / 2f,
                 )
 
             }
