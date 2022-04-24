@@ -1,11 +1,15 @@
 package com.example.cleanarchitecturestockapppl.data.repository
 
 import com.example.cleanarchitecturestockapppl.data.csv.CSVParser
+import com.example.cleanarchitecturestockapppl.data.csv.IntradayInfoParser
 import com.example.cleanarchitecturestockapppl.data.local.StockDatabase
+import com.example.cleanarchitecturestockapppl.data.mappers.toCompanyInfoModel
 import com.example.cleanarchitecturestockapppl.data.mappers.toCompanyListingEntity
 import com.example.cleanarchitecturestockapppl.data.mappers.toCompanyListingModel
 import com.example.cleanarchitecturestockapppl.data.remote.StockApi
+import com.example.cleanarchitecturestockapppl.domain.model.CompanyInfoModel
 import com.example.cleanarchitecturestockapppl.domain.model.CompanyListingModel
+import com.example.cleanarchitecturestockapppl.domain.model.IntradayInfoModel
 import com.example.cleanarchitecturestockapppl.domain.repository.StockRepository
 import com.example.cleanarchitecturestockapppl.util.Resource
 import kotlinx.coroutines.flow.Flow
@@ -24,7 +28,8 @@ class StockRepoImpl @Inject constructor(
     private val db: StockDatabase,
     // dagger hilt is NOT smart enough to pass concrete implementation of the CSVParser interface we created
     // it is because we can have multiple different implementations of the same interface
-    private val companyListingParser: CSVParser<CompanyListingModel>
+    private val companyListingParser: CSVParser<CompanyListingModel>,
+    private val intradayInfoParser: CSVParser<IntradayInfoModel>,
 ) : StockRepository {
     override suspend fun getCompanyListings(
         fetchFromRemote: Boolean,
@@ -90,8 +95,40 @@ class StockRepoImpl @Inject constructor(
                     data = db.dao.searchCompanyListing("")
                         .map { it.toCompanyListingModel() })
             )
-
             emit(Resource.Loading<List<CompanyListingModel>>(isLoading = false))
+        }
+    }
+
+    override suspend fun getIntradayInfo(symbol: String): Resource<List<IntradayInfoModel>> {
+        return try {
+            val response = api.getIntradayInfo(symbol = symbol)
+            val results = intradayInfoParser.parse(response.byteStream())
+            Resource.Success<List<IntradayInfoModel>>(data = results)
+        } catch (e: IOException) {
+            e.printStackTrace()
+            Resource.Error<List<IntradayInfoModel>>(message = "couldn't load intraday info")
+        } catch (e: HttpException) {
+            e.printStackTrace()
+            Resource.Error<List<IntradayInfoModel>>(message = "couldn't load intraday info")
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+            Resource.Error<List<IntradayInfoModel>>(message = "couldn't load intraday info")
+        }
+    }
+
+    override suspend fun getCompanyInfo(symbol: String): Resource<CompanyInfoModel> {
+        return try {
+            val result = api.getCompanyInfo(symbol = symbol)
+            Resource.Success<CompanyInfoModel>(data = result.toCompanyInfoModel())
+        } catch (e: IOException) {
+            e.printStackTrace()
+            Resource.Error<CompanyInfoModel>(message = "couldn't load company info")
+        } catch (e: HttpException) {
+            e.printStackTrace()
+            Resource.Error<CompanyInfoModel>(message = "couldn't load company info")
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+            Resource.Error<CompanyInfoModel>(message = "couldn't load company info")
         }
     }
 }

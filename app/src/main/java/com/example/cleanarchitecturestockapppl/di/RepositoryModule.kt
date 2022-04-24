@@ -2,8 +2,10 @@ package com.example.cleanarchitecturestockapppl.di
 
 import com.example.cleanarchitecturestockapppl.data.csv.CSVParser
 import com.example.cleanarchitecturestockapppl.data.csv.CompanyListingParser
+import com.example.cleanarchitecturestockapppl.data.csv.IntradayInfoParser
 import com.example.cleanarchitecturestockapppl.data.repository.StockRepoImpl
 import com.example.cleanarchitecturestockapppl.domain.model.CompanyListingModel
+import com.example.cleanarchitecturestockapppl.domain.model.IntradayInfoModel
 import com.example.cleanarchitecturestockapppl.domain.repository.StockRepository
 import dagger.Binds
 import dagger.Module
@@ -29,4 +31,10 @@ abstract class RepositoryModule {
     abstract fun bindStockRepository(
         stockRepoImpl: StockRepoImpl
     ): StockRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindIntradayInfoParser(
+        intradayInfoParser: IntradayInfoParser
+    ): CSVParser<IntradayInfoModel>
 }
